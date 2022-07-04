@@ -21,10 +21,17 @@ export const register = async (req,res,next) => {
     }
 }
 
-export const login = (req,res,next) => {
+export const login = async (req,res,next) => {
     try{
-        const user = User.findOne({username: req.body.username});
+        const user = await User.findOne({username: req.body.username});
         if(!user) return next(createError(404,"User not found"))
+        
+        const isPassword = await bcrypt.compare(req.body.password,user.password);
+        if(!isPassword) return next(createError(400,"Wrong password"))
+        
+
+        const {password, isAdmin, ...otherDetails} = user;
+        res.status(200).json({...otherDetails});
     }catch(err){
         next(err);
     }
